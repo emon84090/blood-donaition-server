@@ -4,7 +4,7 @@ require('dotenv').config();
 const dbCOnnect = async () => {
 
     try {
-        const data = await mongoose.connect(`mongodb+srv://DTIBLOOD:cCBv22WD0oVVz6zu@cluster0.dw47wnx.mongodb.net/dtiblood`);
+        const data = await mongoose.connect(`mongodb+srv://${process.env.USERNAMEDTI}:${process.env.PASSWORD}@cluster0.dw47wnx.mongodb.net/dtiblood`);
         console.log(`database conected`);
     } catch (err) {
         console.log("not connected")
