@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
     }
 
 })
-const mailsend = (email, subject, token) => {
+const mailsend = async (email, subject, token) => {
     var mailOptions = {
         from: '"DTI Blood Donaition" <admin@trustpointit.com>',
         to: email,
@@ -18,15 +18,34 @@ const mailsend = (email, subject, token) => {
         text: `${token}`
     };
 
-    transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-            console.log(error);
-        } else {
-            console.log('Email sent: ' + info.response);
-        }
-    });
+    // transporter.sendMail(mailOptions, function (error, info) {
+    //     if (error) {
+    //         console.log(error);
+    //     } else {
+    //         console.log('Email sent: ' + info.response);
+    //     }
+    // });
+
+    const success = await new Promise((resolve, reject) => {
+
+        transporter.sendMail(mailOptions).then((info, err) => {
+            if (info.response.includes('250')) {
+                resolve(true)
+            }
+            reject(err)
+        })
+    })
+
+    if (!success) {
+        res.status(500).json({ error: 'Error sending email' })
+    }
+
+
 
 }
+
+
+
 
 
 module.exports = mailsend;

@@ -22,7 +22,7 @@
   },
   "keywords": [],
   "engines": {
-    "node": ">=14.20.1"
+    "node": ">=16.20.1"
   },
   "author": "",
   "license": "ISC",
