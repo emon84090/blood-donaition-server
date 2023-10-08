@@ -26,19 +26,18 @@ const mailsend = async (email, subject, token) => {
     //     }
     // });
 
-    const success = await new Promise((resolve, reject) => {
-
-        transporter.sendMail(mailOptions).then((info, err) => {
-            if (info.response.includes('250')) {
-                resolve(true)
+    await new Promise((resolve, reject) => {
+        // send mail
+        transporter.sendMail(mailOptions, (err, info) => {
+            if (err) {
+                console.error(err);
+                reject(err);
+            } else {
+                console.log(info);
+                resolve(info);
             }
-            reject(err)
-        })
-    })
-
-    if (!success) {
-        res.status(500).json({ error: 'Error sending email' })
-    }
+        });
+    });
 
 
 
