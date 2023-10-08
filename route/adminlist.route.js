@@ -5,6 +5,19 @@ const { verifyjwt } = require('../utils/verifyjwt');
 
 const Router = require('express').Router();
 
+Router.get("/", verifyjwt, async (req, res, next) => {
+    try {
+        const data = await adminlist.find({}).select("-password");
+        res.status(200).json({
+            status: true,
+            data: data
+        })
+    } catch (err) {
+        next(err)
+    }
+})
+
+
 Router.post("/", verifyjwt, async (req, res, next) => {
     try {
         const existEmail = await adminlist.findOne({ email: req.body.email })
@@ -18,17 +31,6 @@ Router.post("/", verifyjwt, async (req, res, next) => {
         res.status(200).json({
             status: "true",
             message: "Admin Added Successfully"
-        })
-    } catch (err) {
-        next(err)
-    }
-})
-Router.get("/", verifyjwt, async (req, res, next) => {
-    try {
-        const data = await adminlist.find({}).select("-password");
-        res.status(200).json({
-            status: true,
-            data: data
         })
     } catch (err) {
         next(err)
