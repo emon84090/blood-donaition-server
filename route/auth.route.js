@@ -113,7 +113,7 @@ Router.post("/forgetpassword", limiter, async (req, res, next) => {
 
         const token = getUsers.passwordReset();
 
-        sendmail(getUsers.email, "password  reset", token);
+        sendmail(getUsers.email, "Password Reset Otp", token);
 
         await getUsers.save({ validateBeforeSave: false })
 
