@@ -82,7 +82,7 @@ Router.post("/", async (req, res, next) => {
 
 
 
-Router.patch("/updatedate", verifyjwt, async (req, res, next) => {
+Router.patch("/updatedate", async (req, res, next) => {
 
     const { phonenumber } = req.body;
     try {
@@ -125,7 +125,7 @@ Router.patch("/:id", verifyjwt, async (req, res, next) => {
 })
 
 
-Router.get("/:id", async (req, res, next) => {
+Router.get("/:id", verifyjwt, async (req, res, next) => {
     const { id } = req.params;
 
     try {
