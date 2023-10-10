@@ -149,11 +149,11 @@ Router.patch("/resetpassword", limiter, async (req, res, next) => {
         const findToken = await adminlist.findOne({ passwordResetToken: token })
 
         if (!findToken) {
-            return errorhandle("Invalid Token", 400)
+            return errorhandle("Invalid OTP", 400)
         }
         const expired = new Date() > new Date(findToken.passwordResetExpirise);
         if (expired) {
-            return errorhandle("Token Expired,try again", 403)
+            return errorhandle("OTP Expired,Try again", 403)
         }
 
         const hash = bcrypt.hashSync(req.body.password, 10);
@@ -167,7 +167,7 @@ Router.patch("/resetpassword", limiter, async (req, res, next) => {
             await findToken.save({ validateBeforeSave: false })
             res.status(200).send({
                 status: true,
-                message: "password updated success",
+                message: "password reset success",
 
             })
 

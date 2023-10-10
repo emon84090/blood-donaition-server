@@ -4,6 +4,18 @@ const errorhandle = require('../utils/errorhandle');
 const Router = express.Router();
 const { verifyjwt } = require('../utils/verifyjwt');
 
+const { rateLimit } = require('express-rate-limit');
+
+
+const limiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    limit: 3,
+    message: "Too Many Request from This Ip Try Agin After 2 Minutes"
+
+})
+
+
+
 
 Router.get("/", async (req, res, next) => {
 
@@ -82,7 +94,7 @@ Router.post("/", async (req, res, next) => {
 
 
 
-Router.patch("/updatedate", async (req, res, next) => {
+Router.patch("/updatedate", limiter, async (req, res, next) => {
 
     const { phonenumber } = req.body;
     try {

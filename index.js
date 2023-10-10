@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(xss());
 
 
-dbCOnnect()
+dbCOnnect();
 
 app.get("/", (req, res) => {
     res.status(200).send("Blood Donaition Server is Running")
