@@ -60,7 +60,8 @@ Router.get("/", async (req, res, next) => {
 
         res.status(200).json({
             data: result,
-            page: page
+            page: page,
+            totalData
         })
 
 
