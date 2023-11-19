@@ -15,7 +15,7 @@ app.use(xss());
 dbCOnnect();
 
 app.get("/", (req, res) => {
-  res.status(200).send("Blood Donaition Server ");
+  res.status(200).send("Blood Donaition Server is Running");
 });
 app.use("/data", dataroute);
 app.use("/admin", adminroute);
