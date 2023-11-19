@@ -1,178 +1,155 @@
-const express = require('express');
-const datalist = require('../model/datalist');
-const errorhandle = require('../utils/errorhandle');
+const express = require("express");
+const datalist = require("../model/datalist");
+const errorhandle = require("../utils/errorhandle");
 const Router = express.Router();
-const { verifyjwt } = require('../utils/verifyjwt');
+const { verifyjwt } = require("../utils/verifyjwt");
 
-const { rateLimit } = require('express-rate-limit');
-
+const { rateLimit } = require("express-rate-limit");
 
 const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000,
-    limit: 3,
-    message: "Too Many Request from This Ip Try Agin After 2 Minutes"
-
-})
-
-
-
+  windowMs: 1 * 60 * 1000,
+  limit: 3,
+  message: "Too Many Request from This Ip Try Agin After 2 Minutes",
+});
 
 Router.get("/", async (req, res, next) => {
+  let filterQuery = { ...req.query };
 
+  const othersFilter = ["skip", "limit", "page", "filter"];
+  othersFilter.forEach((val) => delete filterQuery[val]);
 
-    let filterQuery = { ...req.query };
+  if (filterQuery.division === "All") {
+    delete filterQuery.division;
+  }
 
-    const othersFilter = ["skip", "limit", "page", "filter"];
-    othersFilter.forEach((val) => delete filterQuery[val]);
+  if (req.query.filter) {
+    filterQuery.bloodgroup = { $in: JSON.parse(req.query.filter) };
+  }
 
-    if (filterQuery.division === "All") {
-        delete filterQuery.division
-    }
+  const queries = {};
 
-    if (req.query.filter) {
+  const { page = 1, limit = 50 } = req.query;
+  const skip = (page - 1) * parseInt(limit);
+  queries.skip = skip;
+  queries.limit = parseInt(limit);
 
-        filterQuery.bloodgroup = { $in: JSON.parse(req.query.filter) }
-    }
+  try {
+    const result = await datalist
+      .find(filterQuery)
+      .sort("-createdAt")
+      .skip(queries.skip)
+      .limit(queries.limit);
 
+    const totalData = await datalist.countDocuments(filterQuery);
 
+    const page = Math.ceil(totalData / queries.limit);
 
-    const queries = {};
-
-    if (req.query.page) {
-        const { page = 1, limit = 50 } = req.query;
-        const skip = (page - 1) * parseInt(limit);
-        queries.skip = skip;
-        queries.limit = parseInt(limit);
-    }
-
-
-    try {
-
-        const result = await datalist.find(filterQuery)
-            .sort("-createdAt")
-            .skip(queries.skip)
-            .limit(queries.limit)
-
-
-        const totalData = await datalist.countDocuments(filterQuery);
-
-        const page = Math.ceil(totalData / queries.limit);
-
-        res.status(200).json({
-            data: result,
-            page: page,
-            totalData
-        })
-
-
-    } catch (err) {
-        next(err)
-    }
-})
+    res.status(200).json({
+      data: result,
+      page: page,
+      totalData,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 Router.post("/", async (req, res, next) => {
+  try {
+    const existPhone = await datalist.findOne({
+      phonenumber: req.body.phonenumber,
+    });
 
-    try {
-        const existPhone = await datalist.findOne({ phonenumber: req.body.phonenumber })
-
-        if (existPhone) {
-            return errorhandle("Phone Number Already Taken", 400)
-        }
-
-
-        const result = await datalist.create(req.body)
-        if (result) {
-            res.status(200).json({
-                status: "success",
-                message: "Data Saved Succesfully"
-            })
-        }
-
-    } catch (err) {
-        next(err)
+    if (existPhone) {
+      return errorhandle("Phone Number Already Taken", 400);
     }
-})
 
-
+    const result = await datalist.create(req.body);
+    if (result) {
+      res.status(200).json({
+        status: "success",
+        message: "Data Saved Succesfully",
+      });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
 
 Router.patch("/updatedate", limiter, async (req, res, next) => {
+  const { phonenumber } = req.body;
+  try {
+    const existPhone = await datalist.findOne({ phonenumber: phonenumber });
 
-    const { phonenumber } = req.body;
-    try {
-        const existPhone = await datalist.findOne({ phonenumber: phonenumber })
-
-        if (!existPhone) {
-            return errorhandle("Phone Number Not Registared", 400)
-        }
-        const result = await datalist.updateOne({ phonenumber: phonenumber }, { $set: { lastdate: req.body.updatedate } })
-        if (!result.modifiedCount) {
-            return errorhandle("data updated faild,try again", 400)
-        }
-
-        res.status(200).json({
-            status: true,
-            message: "date updated success"
-        })
-
-    } catch (err) {
-        next(err)
+    if (!existPhone) {
+      return errorhandle("Phone Number Not Registared", 400);
     }
-})
+    const result = await datalist.updateOne(
+      { phonenumber: phonenumber },
+      { $set: { lastdate: req.body.updatedate } }
+    );
+    if (!result.modifiedCount) {
+      return errorhandle("data updated faild,try again", 400);
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "date updated success",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 Router.patch("/:id", verifyjwt, async (req, res, next) => {
-    const { id } = req.params;
-    try {
-        const result = await datalist.updateOne({ _id: id }, { $set: req.body })
-        if (!result.modifiedCount) {
-            return errorhandle("data updated faild,try again", 400)
-        }
-
-        res.status(200).json({
-            status: true,
-            message: "data updated success"
-        })
-
-    } catch (err) {
-        next(err)
+  const { id } = req.params;
+  try {
+    const result = await datalist.updateOne({ _id: id }, { $set: req.body });
+    if (!result.modifiedCount) {
+      return errorhandle("data updated faild,try again", 400);
     }
-})
 
+    res.status(200).json({
+      status: true,
+      message: "data updated success",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 Router.get("/:id", verifyjwt, async (req, res, next) => {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    try {
-        const result = await datalist.findOne({ _id: id });
-        if (!result) {
-            return errorhandle("invalid id", 400)
-        }
-        res.status(200).json({
-            status: true,
-            data: result
-        })
-
-    } catch (err) {
-        next(err)
+  try {
+    const result = await datalist.findOne({ _id: id });
+    if (!result) {
+      return errorhandle("invalid id", 400);
     }
-})
+    res.status(200).json({
+      status: true,
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 Router.delete("/:id", verifyjwt, async (req, res, next) => {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    try {
-        const result = await datalist.deleteOne({ _id: id });
-        if (!result.deletedCount) {
-            return errorhandle("data deleted faild,try again", 400)
-        }
-        res.status(200).json({
-            status: true,
-            message: "data deleted success"
-        })
-
-    } catch (err) {
-        next(err)
+  try {
+    const result = await datalist.deleteOne({ _id: id });
+    if (!result.deletedCount) {
+      return errorhandle("data deleted faild,try again", 400);
     }
-})
-
+    res.status(200).json({
+      status: true,
+      message: "data deleted success",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 module.exports = Router;
